@@ -1,14 +1,11 @@
 import aiosqlite
-import asyncio
-import logging
 import json
-from aiogram import Bot, Dispatcher, types, Router
+from aiogram import types, Router
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import F
-from config import TOKKEN
 
-router = Router()
+router_handlers = Router()
 
 # Зададим имя базы данных
 DB_NAME = 'quiz_bot.db'
@@ -30,16 +27,19 @@ def generate_options_keyboard(answer_options, right_answer):
     builder.adjust(1)
     return builder.as_markup()
 
-
-
-
-
 # Хэндлер на команду /start
-@router.message(Command("start"))
+@router_handlers.message(Command("start"))
 async def cmd_start(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать игру"))
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
+# Хэндлер на команду /quiz
+@router_handlers.message(F.text=="Начать игру")
+@router_handlers.message(Command("quiz"))
+async def cmd_quiz(message: types.Message):
+
+    await message.answer(f"Давайте начнем квиз!")
+    await new_quiz(message)
 
 
 async def get_question(message, user_id):
@@ -94,23 +94,7 @@ async def update_user_score(user_id, new_score):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute('INSERT INTO users (user_id, score) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET score = excluded.score', (user_id, new_score))
         await db.commit()
-# Хэндлер на команду /quiz
-@router.message(F.text=="Начать игру")
-@router.message(Command("quiz"))
-async def cmd_quiz(message: types.Message):
-
-    await message.answer(f"Давайте начнем квиз!")
-    await new_quiz(message)
 
 
 
-async def create_table():
-    
-    # Создаем соединение с базой данных (если она не существует, она будет создана)
-    async with aiosqlite.connect(DB_NAME) as db:
-        # Создаем таблицу
-        await db.execute('''CREATE TABLE IF NOT EXISTS quiz_state (user_id INTEGER PRIMARY KEY, question_index INTEGER)''')
-        await db.execute('''CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, score INTEGER)''')
-        # Сохраняем изменения
-        await db.commit()
-    await create_table()        
+

@@ -1,14 +1,11 @@
-from aiogram import Bot, Dispatcher, types, Router
-from aiogram.filters.command import Command
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram import types, Router
 from aiogram import F
-from config import TOKKEN
-from handlers import get_quiz_index, get_user_score, update_quiz_index,update_user_score,quiz_data,get_question
+from handlers import get_quiz_index,get_user_score,update_quiz_index,update_user_score,get_question,quiz_data
 
-router = Router()
+router_calback = Router()
 
 
-@router.callback_query(F.data == "right_answer")
+@router_calback.callback_query(F.data == "right_answer")
 async def right_answer(callback: types.CallbackQuery):
 
     await callback.bot.edit_message_reply_markup(
@@ -33,7 +30,7 @@ async def right_answer(callback: types.CallbackQuery):
         await callback.message.answer(f"Это был последний вопрос. Квиз завершен!\n Вы ответили на {current_score} вопросов правильно")
 
 
-@router.callback_query(F.data == "wrong_answer")
+@router_calback.callback_query(F.data == "wrong_answer")
 async def wrong_answer(callback: types.CallbackQuery):
     await callback.bot.edit_message_reply_markup(
         chat_id=callback.from_user.id,
